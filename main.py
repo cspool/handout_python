@@ -39,52 +39,33 @@ if __name__ == '__main__':
 
     ox = conv.out(ix, k_config, s_config, p_config)
     oy = conv.out(iy, k_config, s_config, p_config)
-    # tile_num_x,left_x,tile_num_y,left_y = conv.tiling(ox, oy, pox, poy)
-
-    # [1...poy]                                   [1...pox] * tile_num_x, [ox-left_x+1, ox] * 1
-    # [poy+1...2poy]                              [1...pox] * tile_num_x, [ox-left_x+1, ox] * 1
-    # ....
-    # [tile_num_y*poy-poy+1...tile_num_y*poy]     [1...pox] * tile_num_x, [ox-left_x+1, ox] * 1
-    # [tile_num_y*poy+1...tile_num_y*poy+left_y]  [1...pox] * tile_num_x, [ox-left_x+1, ox] * 1
-    # for tile_y in range(1, tile_num_y+2):
-    #     if tile_y < tile_num_y + 1:
-    #         for tile_x in range(1, tile_num_x+1):
-    #             print()
-    #             print("tile_y: %d, tile_x: %d, pox: %d, poy: %d" % (tile_y, tile_x, pox, poy))
-    #             conv.conv_tile(ox_start=1+(tile_x-1)*pox, oy_start=1+(tile_y-1)*poy, pox=pox, poy=poy,
-    #                            k=k_config, s=s_config, p=p_config, ix=ix, iy=iy)
-    #         if left_x > 0:
-    #             tile_x = tile_num_x + 1
-    #             print()
-    #             print("tile_y: %d, tile_x: %d, pox: %d, poy: %d" % (tile_y, tile_x, left_x, poy))
-    #             conv.conv_tile(ox_start=1 + (tile_x - 1) * pox, oy_start=1 + (tile_y - 1) * poy, pox=pox, poy=poy,
-    #                            k=k_config, s=s_config, p=p_config, ix=ix, iy=iy)
-    #     elif left_y > 0:
-    #         for tile_x in range(1, tile_num_x + 1):
-    #             print()
-    #             print("tile_y: %d, tile_x: %d, pox: %d, poy: %d" % (tile_y, tile_x, pox, left_y))
-    #             conv.conv_tile(ox_start=1 + (tile_x - 1) * pox, oy_start=1 + (tile_y - 1) * poy, pox=pox, poy=left_y,
-    #                            k=k_config, s=s_config, p=p_config, ix=ix, iy=iy)
-    #         if left_x > 0:
-    #             tile_x = tile_num_x + 1
-    #             print()
-    #             print("tile_y: %d, tile_x: %d, pox: %d, poy: %d" % (tile_y, tile_x, left_x, left_y))
-    #             conv.conv_tile(ox_start=1 + (tile_x - 1) * pox, oy_start=1 + (tile_y - 1) * poy, pox=pox, poy=left_y,
-    #                            k=k_config, s=s_config, p=p_config, ix=ix, iy=iy)
 
     tile_x_start = 1
     tile_y_start = 1
-    for tile_y_start in range(1, oy+1, poy):
-        # [tile_y_start, tile_y_start+poy-1]
-        size_y = oy - tile_y_start + 1 if(tile_y_start+poy-1 > oy) else poy
 
-        for tile_x_start in range(1, ox+1, pox):
-            # [tile_x_start, tile_x_start+pox-1]
-            size_x = ox - tile_x_start + 1 if(tile_x_start+pox-1 > ox) else pox
+    # maybe scan x direction first, then y direction
+    # for tile_y_start in range(1, oy+1, poy):
+    #     # [tile_y_start, tile_y_start+poy-1]
+    #     size_y = oy - tile_y_start + 1 if(tile_y_start+poy-1 > oy) else poy
+    #
+    #     for tile_x_start in range(1, ox+1, pox):
+    #         # [tile_x_start, tile_x_start+pox-1]
+    #         size_x = ox - tile_x_start + 1 if(tile_x_start+pox-1 > ox) else pox
+    #
+    #         print("tile_y_start: %d, tile_x_start: %d, pox: %d, poy: %d"
+    #               % (tile_y_start, tile_x_start, size_x, size_y))
+    #         conv.conv_tile(ox_start=tile_x_start, oy_start=tile_y_start, pox = pox, poy=size_y,
+    #                        k=k_config, s=s_config, p=p_config, ix=ix, iy=iy)
+
+    for tile_x_start in range(1, ox + 1, pox):
+        # [tile_x_start, tile_x_start+pox-1]
+        size_x = ox - tile_x_start + 1 if (tile_x_start + pox - 1 > ox) else pox
+
+        for tile_y_start in range(1, oy + 1, poy):
+            # [tile_y_start, tile_y_start+poy-1]
+            size_y = oy - tile_y_start + 1 if (tile_y_start + poy - 1 > oy) else poy
+
             print("tile_y_start: %d, tile_x_start: %d, pox: %d, poy: %d"
                   % (tile_y_start, tile_x_start, size_x, size_y))
-            conv.conv_tile(ox_start=tile_x_start, oy_start=tile_y_start, pox = pox, poy=size_y,
+            conv.conv_tile(ox_start=tile_x_start, oy_start=tile_y_start, pox=pox, poy=size_y,
                            k=k_config, s=s_config, p=p_config, ix=ix, iy=iy)
-
-
-
