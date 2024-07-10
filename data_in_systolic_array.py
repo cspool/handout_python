@@ -1,6 +1,22 @@
 import math
 import random
 
+def to_hex_twos_complement(number, bits=16):
+    """将有符号整数转换为16进制补码形式。
+
+    Args:
+    numbers: 有符号整数。
+    bits: 整数的位数，默认为8位。
+
+    Returns:
+    一个16进制数。
+    """
+    mask = (1 << bits) - 1
+    if number < 0:
+        twos_complement = (number + (1 << bits)) & mask
+    else:
+        twos_complement = number & mask
+    return hex(twos_complement)
 
 def get_pixel(feature_maps, channel, x, y, nix, niy, p): ##channel, x, y from 1
     if (x >= 1 + p and x <= nix+p and y >= 1+p and y <= niy+p):
@@ -131,7 +147,7 @@ def tiling_bit_fusion(mode, re_fm, re_ker, tilings_fused_fm, tilings_fused_ker,
                       zero_switch):
     tile_num_oy = math.ceil(noy/toy)
     for boy in range(1, noy + 1, toy):
-        boy_by_toy = math.ceil(boy/toy)
+        boy_by_toy = math.ceil(boy/toy) ## boy_by_toy is the index of tile_y_index, a tile_oy once
         if len(tilings_fused_fm) < tile_num_oy:
             tilings_fused_fm.append([])
         else:
@@ -139,29 +155,29 @@ def tiling_bit_fusion(mode, re_fm, re_ker, tilings_fused_fm, tilings_fused_ker,
 
         tile_num_ox = math.ceil(nox / tox)
         for box in range(1, nox + 1, tox):
-            box_by_tox = math.ceil(box / tox)
+            box_by_tox = math.ceil(box / tox) ## box_by_tox is the index of tile_x(fm), a tile_ox once
             if len(tilings_fused_fm[boy_by_toy - 1]) < tile_num_ox:
                 tilings_fused_fm[boy_by_toy - 1].append([])
             else:
                 tilings_fused_fm[boy_by_toy - 1][box_by_tox - 1] = []
 
-            end_oy = min(boy + toy, noy + 1)
+            end_oy = min(boy + toy, noy + 1)-1
             size_a_oy_tile = end_oy - boy + 1
-            for oy in range(boy, end_oy):
-                oy_in_tile = (oy-1)%toy + 1
+            for oy in range(boy, end_oy+1):
+                oy_in_tile = (oy-1)%toy + 1 ## oy_in_tile is in [1,3], map to 3 SAs
                 if len(tilings_fused_fm[boy_by_toy - 1][box_by_tox - 1]) < size_a_oy_tile:
                     tilings_fused_fm[boy_by_toy - 1][box_by_tox - 1].append([])
                 else:
                     tilings_fused_fm[boy_by_toy - 1][box_by_tox - 1][oy_in_tile-1] = []
 
-                end_ox = min(box + tox, nox + 1)
+                end_ox = min(box + tox, nox + 1) - 1
                 size_a_ox_tile = math.ceil((end_ox - box + 1) / 2)
                 is_even = 1
                 if size_a_ox_tile & 0x1 == 0x1:
                     is_even = 0
                 # a num in fused_fm is 2 activation
-                for ox in range(box, end_ox, 2):
-                    ox_in_tile=math.ceil((((ox-1)%tox) +1)/2)
+                for ox in range(box, end_ox+1, 2):
+                    ox_in_tile=math.ceil((((ox-1)%tox) +1)/2) ## ox_in_tile is in [1, column_num], map to those columns
                     if len(tilings_fused_fm[boy_by_toy - 1][box_by_tox - 1][oy_in_tile-1]) < size_a_ox_tile:
                         tilings_fused_fm[boy_by_toy - 1][box_by_tox - 1][oy_in_tile-1].append([])
                     else:
@@ -178,25 +194,25 @@ def tiling_bit_fusion(mode, re_fm, re_ker, tilings_fused_fm, tilings_fused_ker,
                                     is_even == 1 or ox +1 < end_ox) else 0  ## signed value, higher ox index fused in the higher bits
                         tilings_fused_fm[boy_by_toy - 1][box_by_tox - 1][oy_in_tile-1][ox_in_tile-1].append((a2 << 8) + a1)
 
-                    zero_num = size_a_ox_tile - zero_num - 1 if zero_switch else 0
+                    zero_num = (size_a_ox_tile - zero_num - 1) if zero_switch else 0
                     tilings_fused_fm[boy_by_toy - 1][box_by_tox - 1][oy_in_tile - 1][ox_in_tile - 1].extend([0]*zero_num)
 
     tile_size_of = math.ceil(nof/tof)
     for bof in range(1, nof + 1, tof):
-        bof_by_tof = math.ceil(bof/tof)
+        bof_by_tof = math.ceil(bof/tof) ## boy_by_toy is the index of tile_of(ker), a tile_of once
         if len(tilings_fused_ker) < tile_size_of:
             tilings_fused_ker.append([])
         else:
             tilings_fused_ker[bof_by_tof - 1] = []
 
         of_step = mode + 1 ## 1 if mode == 0; 2 if mode == 1
-        end_of = min(bof + tof, nof+1)
+        end_of = min(bof + tof, nof+1) -1
         size_a_of_tile = math.ceil((end_of - bof + 1) / of_step)
         is_even = 1
         if size_a_of_tile & 0x1 == 0x1:
             is_even = 0
-        for of in range(bof, end_of, of_step):
-            of_in_tile = math.ceil((((of-1)%tof)+1)/of_step)
+        for of in range(bof, end_of+1, of_step):
+            of_in_tile = math.ceil((((of-1)%tof)+1)/of_step)  ## of_in_tile is in [1, row_num], map to those rows
             if len(tilings_fused_ker[bof_by_tof - 1]) < size_a_of_tile:
                 tilings_fused_ker[bof_by_tof - 1].append([])
             else:
@@ -214,7 +230,7 @@ def tiling_bit_fusion(mode, re_fm, re_ker, tilings_fused_fm, tilings_fused_ker,
                         mode == 1 and(is_even == 1 or of + 1 < end_of)) else 0  ## signed value, higher ox index fused in the higher bits
                 tilings_fused_ker[bof_by_tof - 1][of_in_tile - 1].append((w2 << 1) + w1)
 
-            zero_num = size_a_of_tile - zero_num - 1 if zero_switch else 0
+            zero_num = (size_a_of_tile) - zero_num - 1 if zero_switch else 0
             tilings_fused_ker[bof_by_tof - 1][of_in_tile - 1].extend([0]*zero_num)
 
 
@@ -235,14 +251,14 @@ fused_ker=[]
 tilings_fused_fm=[]
 tilings_fused_ker=[]
 
-nix=4;
-niy=4;
-nif=1;
-nof=2;
-nkx=1; ## 1 3
-nky=1; ## 1 3
+nix=5;
+niy=5;
+nif=3;
+nof=4;
+nkx=3; ## 1 3
+nky=3; ## 1 3
 s=1; ## 1
-p=0; ## 0 1
+p=1; ## 0 1
 
 column_num = 32
 row_num = 32
@@ -259,6 +275,9 @@ noy = math.floor((niy+2*p-nky)/s + 1)
 
 fm_word_width = 8
 ker_word_width = 8 if mode == 0 else 1
+
+fused_fm_bits = 16
+fused_ker_bits = 8 if mode == 0 else 1
 
 init_fm_k(feature_maps=feature_maps, kernels=kernels,
           nif=nif, nix=nix, niy=niy, nkx=nkx, nky=nky, nof=nof,
@@ -281,8 +300,8 @@ for of in range(1, len(re_kernel) +1):
     print(re_kernel[of-1])
 
 
-monolithic_bit_fusion(mode=mode, re_fm=re_fm, re_ker=re_kernel, fused_fm=fused_fm, fused_ker=fused_ker,
-           nof=nof, nox=nox, noy=noy)
+# monolithic_bit_fusion(mode=mode, re_fm=re_fm, re_ker=re_kernel, fused_fm=fused_fm, fused_ker=fused_ker,
+#            nof=nof, nox=nox, noy=noy)
 #
 # print("---------fused feature map----------")
 # for oy in range(1, len(fused_fm) + 1):
@@ -311,7 +330,7 @@ for boy in range(1, len(tilings_fused_fm) + 1):
 
             for ox in range(1, len(tilings_fused_fm[boy-1][box-1][oy-1]) + 1):
                 print("tile_oy_index:%d, tile_ox_index:%d, oy_in_tile:%d, ox_in_tile:%d" %(boy, box, oy, ox))
-                hex_numbers = [hex(num) for num in tilings_fused_fm[boy-1][box-1][oy-1][ox-1]]
+                hex_numbers = [to_hex_twos_complement(num, fused_fm_bits) for num in tilings_fused_fm[boy-1][box-1][oy-1][ox-1]]
                 print(hex_numbers)
 
 print("----------fused tiling kernels-------------")
@@ -320,5 +339,5 @@ for bof in range(1, len(tilings_fused_ker) +1):
 
     for of in range(1, len(tilings_fused_ker[bof-1]) + 1):
         print("tile_of_index:%d, of_in_tile:%d" % (bof, of))
-        bin_numbers = [bin(num) for num in tilings_fused_ker[bof-1][of-1]]
-        print(bin_numbers)
+        hex_numbers = [to_hex_twos_complement(num, fused_ker_bits) for num in tilings_fused_ker[bof-1][of-1]]
+        print(hex_numbers)
