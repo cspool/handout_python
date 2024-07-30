@@ -1,4 +1,4 @@
-
+from data_in_systolic_array import to_hex_twos_complement
 def useless_func(tofill, content):
 # temporary ref_type var tofill(val=ref of tofill outside),content(val=ref of content outside) is created when enter the func,
 # and the equation op assign the val of var content(the ref of the obj content outside) to the temporary var tofill,
@@ -15,7 +15,7 @@ def useless_func(tofill, content):
     tofill = content
     print("tofill")
     print(id(tofill))
-    print(tofill)
+    print(tofill)  
     print("content")
     print(id(content))
     print(content)
@@ -65,9 +65,21 @@ def useful_func(tofill, content):
 # tofill = content
 # print(tofill)
 
-demo_list = []
-demo_list.extend([0]*0)
-print(demo_list)
+# demo_list = []
+# demo_list.extend([0]*0)
+# print(demo_list)
+#
+# demo_list = demo_list.extend([0]*0) ## extend return none
+# print(demo_list)
 
-demo_list = demo_list.extend([0]*0) ## extend return none
-print(demo_list)
+print(to_hex_twos_complement((((-62*104)&0xfffff) + (((-62*124) & 0xfffff) << 20)
+                              + (((-62 * 18)&0xfffff) << 40) + (((-62*125)&0xfffff) << 60)), 80))
+
+print(to_hex_twos_complement((((-60*104)&0xfffff) + (((-60*124) & 0xfffff) << 20)
+                              + (((-60*18) & 0xfffff) << 40) + (((-60*125) & 0xfffff) << 60)), 80))
+
+print(to_hex_twos_complement((((-64)&0x3fff) + (((19) & 0x3fff) << 20)
+                              + (((-16)&0x3fff) << 40) + (((55)&0x3fff) << 60)), 80))
+
+print(to_hex_twos_complement((((64)&0x3fff) + (((-19) & 0x3fff) << 20)
+                              + (((16) & 0x3fff) << 40) + (((-55) & 0x3fff) << 60)), 80))

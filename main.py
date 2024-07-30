@@ -22,12 +22,12 @@ import conv
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    config = 2 ## 0, 1, 2, 3
+    config = 3 ## 0, 1, 2, 3
 
-    pox = 4
-    poy = 6
-    ix = 12
-    iy = 12
+    pox = 32
+    poy = 3
+    ix = 32
+    iy = 32
 
     k = [1,3,3,6]
     s = [1,1,2,2]
@@ -43,15 +43,15 @@ if __name__ == '__main__':
     tile_x_start = 1
     tile_y_start = 1
 
-    # maybe scan x direction first, then y direction
+    # # maybe scan x direction first, then y direction
     # for tile_y_start in range(1, oy+1, poy):
     #     # [tile_y_start, tile_y_start+poy-1]
     #     size_y = oy - tile_y_start + 1 if(tile_y_start+poy-1 > oy) else poy
-    #
+
     #     for tile_x_start in range(1, ox+1, pox):
     #         # [tile_x_start, tile_x_start+pox-1]
     #         size_x = ox - tile_x_start + 1 if(tile_x_start+pox-1 > ox) else pox
-    #
+
     #         print("tile_y_start: %d, tile_x_start: %d, pox: %d, poy: %d"
     #               % (tile_y_start, tile_x_start, size_x, size_y))
     #         conv.conv_tile(ox_start=tile_x_start, oy_start=tile_y_start, pox = pox, poy=size_y,
@@ -60,11 +60,11 @@ if __name__ == '__main__':
     for tile_x_start in range(1, ox + 1, pox):
         # [tile_x_start, tile_x_start+pox-1]
         size_x = ox - tile_x_start + 1 if (tile_x_start + pox - 1 > ox) else pox
-
+    
         for tile_y_start in range(1, oy + 1, poy):
             # [tile_y_start, tile_y_start+poy-1]
             size_y = oy - tile_y_start + 1 if (tile_y_start + poy - 1 > oy) else poy
-
+    
             print("tile_y_start: %d, tile_x_start: %d, pox: %d, poy: %d"
                   % (tile_y_start, tile_x_start, size_x, size_y))
             conv.conv_tile(ox_start=tile_x_start, oy_start=tile_y_start, pox=pox, poy=size_y,

@@ -251,14 +251,14 @@ fused_ker=[]
 tilings_fused_fm=[]
 tilings_fused_ker=[]
 
-nix=5;
-niy=5;
-nif=3;
-nof=4;
-nkx=3; ## 1 3
-nky=3; ## 1 3
+nix=4;
+niy=4;
+nif=1;
+nof=2;
+nkx=1; ## 1 3
+nky=1; ## 1 3
 s=1; ## 1
-p=1; ## 0 1
+p=0; ## 0 1
 
 column_num = 32
 row_num = 32
