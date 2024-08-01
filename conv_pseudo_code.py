@@ -136,28 +136,30 @@ conv(...)
 
 pseudo_code:
 
-for kw_i in range(1,kw+1):
-    #kw index
 
-    for kh_i in range(1,kh+1):
-        #kh index
 
-        for tile_ci_i in range(1, ci+1, tile_ci):
-            #tile_ci index
-            tile_ci_size = min(tile_ci, ci+1-tile_ci_i)
+for tile_ci_i in range(1, ci+1, tile_ci):
+    #tile_ci index
+    tile_ci_size = min(tile_ci, ci+1-tile_ci_i)
 
-            for tile_co_i in range(1, co+1, tile_co):
-                #tile_co index
-                tile_co_size = min(tile_co, co+1-tile_co_i)
+    for tile_co_i in range(1, co+1, tile_co):
+        #tile_co index
+        tile_co_size = min(tile_co, co+1-tile_co_i)
 
-                for tile_ho_i in range(1, ho+1, tile_ho):
-                    #tile_ho index
-                    # some tile_ho may not eq 3
-                    tile_ho_size = min(tile_ho, ho+1-tile_ho_i)
-                
-                    for tile_wo_i in range(1, wo+1, tile_wo):
-                        #tile_wo index
-                        tile_wo_size = min(tile_wo, wo+1-tile_wo_i)
+        for tile_ho_i in range(1, ho+1, tile_ho):
+            #tile_ho index
+            # some tile_ho may not eq 3
+            tile_ho_size = min(tile_ho, ho+1-tile_ho_i)
+        
+            for tile_wo_i in range(1, wo+1, tile_wo):
+                #tile_wo index
+                tile_wo_size = min(tile_wo, wo+1-tile_wo_i)
+
+                for kw_i in range(1,kw+1):
+                    #kw index
+
+                    for kh_i in range(1,kh+1):
+                        #kh index
 
                         for ci_parallel_index in range(tile_ci_i, tile_ci_i + tile_ci_size, parallel_ci):
                             parallel_ci_size = min(parallel_ci, tile_ci_i + tile_ci_size -ci_parallel_index)

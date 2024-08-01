@@ -24,10 +24,10 @@ import conv
 if __name__ == '__main__':
     config = 3 ## 0, 1, 2, 3
 
-    pox = 32
+    pox = 32 ## parallel output pixels in parallel 
     poy = 3
-    ix = 32
-    iy = 32
+    ox = 32
+    oy = 32
 
     k = [1,3,3,6]
     s = [1,1,2,2]
@@ -37,8 +37,11 @@ if __name__ == '__main__':
     s_config = s[config]
     p_config = p[config]
 
-    ox = conv.out(ix, k_config, s_config, p_config)
-    oy = conv.out(iy, k_config, s_config, p_config)
+    # ox = conv.out(ix, k_config, s_config, p_config)
+    # oy = conv.out(iy, k_config, s_config, p_config)
+
+    ix = conv.input(ox, k_config, s_config, p_config)
+    iy = conv.input(oy, k_config, s_config, p_config)
 
     tile_x_start = 1
     tile_y_start = 1

@@ -20,6 +20,9 @@ def out(input, k, s, p):
     ## (out - 1)*s +k = in + 2p
     return math.floor((input + 2*p - k)/s + 1)
 
+def input(out, k, s, p):
+    return (out - 1) * s + k - 2*p
+
 # [1...poy]                                   [1...pox] * tile_num_x, [ox-left_x+1, ox] * 1
 # [poy+1...2poy]                              [1...pox] * tile_num_x, [ox-left_x+1, ox] * 1
 # ....
@@ -54,7 +57,7 @@ def conv_row_tile(row_y, ix, ox_start, pox, k, s, p): ##ox, oy are from 1
         exit(-1)
     row_start = row_start - p - 1
     # row_start [0...ix-1]
-    # row_start = 0 if (ix_start <= p) else (tile_x-1)*s*pox - p
+    # row_start = 0 if (ix_start <= p) else (tile_x)*s*pox - p
 
     row_end_min = ix_end_min - right_pad_min
     # row_end_min [1...ix+2p]
@@ -62,7 +65,7 @@ def conv_row_tile(row_y, ix, ox_start, pox, k, s, p): ##ox, oy are from 1
         exit(-1)
     row_end_min = row_end_min - p - 1
     # row_end_min [0...ix-1]
-    # row_end_min = ix-1 if (ix_end_min - (p + ix) > 0) else tile_x*s*pox+ 2-s
+    # row_end_min = ix-1 if (ix_end_min - (p + ix) > 0) else (tile_x+1)*s*pox -p -s+1
 
     row_end = ix_end - right_pad
     # row_end [1...ix+2p]
@@ -70,11 +73,13 @@ def conv_row_tile(row_y, ix, ox_start, pox, k, s, p): ##ox, oy are from 1
         exit(-1)
     row_end = row_end - p - 1
     # row_end [0...ix-1]
-    # row_end = ix-1 if (ix_end - (p + ix) > 0) else tile_x*s*pox+ k-s
+    # row_end = ix-1 if (ix_end - (p + ix) > 0) else (tile_x+1)*s*pox+ k-s-p-1
 
-    # left_pad, row[r_s, r_e_m], row[r_e_m+1, r_e], right_pad
+    # left_pad, row[row_start, row_end_min], row[row_end_min+1, row_end], right_pad
 
     overlap = 0 if (row_start == 0) else p
+
+    assert overlap + left_pad == p
 
     assert math.ceil(row_start/pox) * pox == row_start + overlap
 

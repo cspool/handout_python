@@ -1,37 +1,79 @@
 import numpy as np
 
-def get_a_row(ci_idx, row_idx):
-    res = 0
-    for i in range(tile_wi, 0, -1):
-        res = (res << 8) + input[ci_idx-1][row_idx-1][i-1]
+paths = ['./rom1.txt', './rom2.txt', './rom3.txt']
 
+def get_a_row(ci_idx, row_idx, col_l, col_r, pad):
+    res = ''
+    if pad:
+            res = '0'
+    else:
+        for i in range(col_r, col_l-1, -1):
+            ele = input[ci_idx-1][row_idx-1][i-1]
+            ele = ele if ele >= 0 else (ele+256)
+            s_ele = format(ele, '02X')
+            res = res + s_ele
     return res
 
-tile_wi = 64
-tile_hi = 64
-tile_ci = 1
-p = 2
-s = 2
+config = 3
+k           = [1, 3, 3, 6] ## useless
+s_set       = [1, 1, 2, 2]
+p_set       = [0, 1, 1, 2]
+tile_wi_set = [32,32,64,64]
+tile_hi_set = [32,32,16,16]
+
+tile_wi = tile_wi_set[config]
+tile_hi = tile_hi_set[config]
+tile_ci = 256
+p = p_set[config]
+s = s_set[config]
 pixels_in_word = 32
 buffer_num = 3
-buffer_size = 3072
+buffer_size = 5120
 
 ## how to map a or a tile of f_map from ddr to buffers on-chip
+input = np.zeros((tile_ci, tile_hi, tile_wi)).astype(np.int8)
 
-# input = [[[11,12,13,14,15,16,17,18],
-#          [21,22,23,24,25,26,27,28],
-#          [31,32,33,34,35,36,37,38],
-#          [41,42,43,44,45,46,47,48],
-#          [51,52,53,54,55,56,57,58],
-#          [61,62,63,64,65,66,67,68],
-#          [71,72,73,74,75,76,77,78],
-#          [81,82,83,84,85,86,87,88]]]
+if config == 0 or config == 1:
+    ## 32 * 32
+    input_row1 = np.arange(0, 32)
+    input_row2 = np.arange(32, 64)
+    input_row3 = np.arange(64, 96)
+    input_row4 = np.arange(96, 128)
+    input_row5 = np.arange(128, 160)
+    input_row6 = np.arange(160, 192)
+    input_row7 = np.arange(192, 224)
+    input_row8 = np.arange(224, 256)
 
-input = np.random.rand(tile_ci, tile_hi, tile_wi)
-input = input * 256
-input = (input-128).astype(np.int8)
+    for tci in range(1, tile_ci+1):
+        for thi in range(1, tile_hi, 8):
+            input[tci-1][thi-1] = input_row1
+            input[tci-1][thi-1 + 1] = input_row2
+            input[tci-1][thi-1 + 2] = input_row3
+            input[tci-1][thi-1 + 3] = input_row4
+            input[tci-1][thi-1 + 4] = input_row5
+            input[tci-1][thi-1 + 5] = input_row6
+            input[tci-1][thi-1 + 6] = input_row7
+            input[tci-1][thi-1 + 7] = input_row8
+else:
+    ## 64 * 64
+    input_row1 = np.arange(0, 64)
+    input_row2 = np.arange(64, 128)
+    input_row3 = np.arange(128, 192)
+    input_row4 = np.arange(192, 256)
 
-buffers = np.zeros((buffer_num, buffer_size)).astype(int)
+    for tci in range(1, tile_ci+1):
+        for thi in range(1, tile_hi, 4):
+            input[tci-1][thi-1] = input_row1
+            input[tci-1][thi-1 + 1] = input_row2
+            input[tci-1][thi-1 + 2] = input_row3
+            input[tci-1][thi-1 + 3] = input_row4
+
+
+# input = np.random.rand(tile_ci, tile_hi, tile_wi)
+# input = input * 256
+# input = (input-128).astype(np.int8)
+
+buffers = np.full((buffer_num, buffer_size), "0", dtype=object)
 buffer_ofts = np.zeros((buffer_num)).astype(int)
 
 for ci_i in range(1, tile_ci+1):
@@ -48,7 +90,8 @@ for ci_i in range(1, tile_ci+1):
                 for pixel_idx in range(1, tile_wi+1, pixels_in_word):
                     print("pad row %d [%d : %d] fill in buffer %d at offset %d" 
                           %(pad_north_i, pixel_idx+pixels_in_word-1, pixel_idx, buf_i, buffer_ofts[buf_i-1]))
-                    buffers[buf_i-1][buffer_ofts[buf_i-1]] = 0
+                    buffers[buf_i-1][buffer_ofts[buf_i-1]] = \
+                        get_a_row(ci_idx=ci_i, row_idx=pad_north_i, col_l=pixel_idx, col_r=pixel_idx+pixels_in_word-1, pad=1)
                     buffer_ofts[buf_i-1] = buffer_ofts[buf_i-1] + 1
                 pad_north_i = pad_north_i + 1
             else:
@@ -70,7 +113,8 @@ for ci_i in range(1, tile_ci+1):
             for pixel_idx in range(1, tile_wi+1, pixels_in_word):
                 print("fm row %d [%d : %d] fill in buffer %d at offset %d" 
                       %(row_i, pixel_idx+pixels_in_word-1, pixel_idx, buf_i, buffer_ofts[buf_i-1]))
-                buffers[buf_i-1][buffer_ofts[buf_i-1]] = get_a_row(ci_idx=ci_i, row_idx=row_i)
+                buffers[buf_i-1][buffer_ofts[buf_i-1]] = \
+                    get_a_row(ci_idx=ci_i, row_idx=row_i, col_l=pixel_idx, col_r=pixel_idx+pixels_in_word-1, pad=0)
                 buffer_ofts[buf_i-1] = buffer_ofts[buf_i-1] + 1
             row_i = row_i + 1
             s_i = s_i + 1
@@ -87,7 +131,8 @@ for ci_i in range(1, tile_ci+1):
                 for pixel_idx in range(1, tile_wi+1, pixels_in_word):
                     print("fm row %d [%d : %d] fill in buffer %d at offset %d" 
                           %(row_i, pixel_idx+pixels_in_word-1, pixel_idx, buf_i, buffer_ofts[buf_i-1]))
-                    buffers[buf_i-1][buffer_ofts[buf_i-1]] = get_a_row(ci_idx=ci_i, row_idx=row_i)
+                    buffers[buf_i-1][buffer_ofts[buf_i-1]] = \
+                        get_a_row(ci_idx=ci_i, row_idx=row_i, col_l=pixel_idx, col_r=pixel_idx+pixels_in_word-1, pad=0)
                     buffer_ofts[buf_i-1] = buffer_ofts[buf_i-1] + 1
                 row_i = row_i + 1
             else:
@@ -109,7 +154,8 @@ for ci_i in range(1, tile_ci+1):
             for pixel_idx in range(1, tile_wi+1, pixels_in_word):
                 print("pad row %d [%d : %d] fill in buffer %d at offset %d" 
                       %(pad_south_i, pixel_idx+pixels_in_word-1, pixel_idx, buf_i, buffer_ofts[buf_i-1]))
-                buffers[buf_i-1][buffer_ofts[buf_i-1]] = 0
+                buffers[buf_i-1][buffer_ofts[buf_i-1]] = \
+                    get_a_row(ci_idx=ci_i, row_idx=pad_south_i, col_l=pixel_idx, col_r=pixel_idx+pixels_in_word-1, pad=1)
                 buffer_ofts[buf_i-1] = buffer_ofts[buf_i-1] + 1
             pad_south_i = pad_south_i + 1
             s_i = s_i + 1
@@ -126,7 +172,8 @@ for ci_i in range(1, tile_ci+1):
                 for pixel_idx in range(1, tile_wi+1, pixels_in_word):
                     print("pad row %d [%d : %d] fill in buffer %d at offset %d"
                            %(pad_south_i, pixel_idx+pixels_in_word-1, pixel_idx, buf_i, buffer_ofts[buf_i-1]))
-                    buffers[buf_i-1][buffer_ofts[buf_i-1]] = 0
+                    buffers[buf_i-1][buffer_ofts[buf_i-1]] = \
+                        get_a_row(ci_idx=ci_i, row_idx=pad_south_i, col_l=pixel_idx, col_r=pixel_idx+pixels_in_word-1, pad=1)
                     buffer_ofts[buf_i-1] = buffer_ofts[buf_i-1] + 1
                 pad_south_i = pad_south_i + 1
             else:
@@ -136,3 +183,16 @@ for ci_i in range(1, tile_ci+1):
                 assert s_i > 1 ## need fix [s_i, s] of [1, s]
             s_i = s_i + 1
         buf_i = (buf_i % buffer_num) + 1
+
+for buf_i in range(1, buffer_num+1):
+    # 打开文件用于写入（'w' 模式），如果文件不存在将会被创建
+    with open('/Users/zack/Desktop/PythonPros/handout/' + paths[buf_i-1], 'w') as file:
+        # 使用 write() 方法写入字符串
+        file.write("MEMORY_INITIALIZATION_RADIX = 16 ;\n")
+        file.write("MEMORY_INITIALIZATION_VECTOR =\n")
+        for buf_oft in range(1, buffer_size+1):
+            file.write(buffers[buf_i-1][buf_oft-1])
+            if buf_oft == buffer_size:
+                file.write(";\n")
+            else:
+                file.write(",\n")
