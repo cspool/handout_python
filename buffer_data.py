@@ -45,7 +45,7 @@ if config == 0 or config == 1:
     input_row8 = np.arange(224, 256)
 
     for tci in range(1, tile_ci+1):
-        for thi in range(1, tile_hi, 8):
+        for thi in range(1, tile_hi+1, 8):
             input[tci-1][thi-1] = input_row1
             input[tci-1][thi-1 + 1] = input_row2
             input[tci-1][thi-1 + 2] = input_row3
@@ -62,7 +62,7 @@ else:
     input_row4 = np.arange(192, 256)
 
     for tci in range(1, tile_ci+1):
-        for thi in range(1, tile_hi, 4):
+        for thi in range(1, tile_hi+1, 4):
             input[tci-1][thi-1] = input_row1
             input[tci-1][thi-1 + 1] = input_row2
             input[tci-1][thi-1 + 2] = input_row3
